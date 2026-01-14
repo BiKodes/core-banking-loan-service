@@ -1,0 +1,9 @@
+# Base requirements for the project
+celery
+Django
+django-allauth
+django-cleanup
+djangorestframework
+Pillow
+redis
+requests
