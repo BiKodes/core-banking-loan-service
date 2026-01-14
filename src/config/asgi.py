@@ -2,16 +2,10 @@
 ASGI config for core-banking-loan-service project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
-
 """
 import os
 
-from channels.auth import AuthMiddlewareStack
-from channels.routing import ProtocolTypeRouter, URLRouter
-from channels.security.websocket import AllowedHostsOriginValidator
 from configurations.asgi import get_asgi_application
-
-from src.chat import routing
 
 
 # Default to local environment if not explicitly set
@@ -28,13 +22,5 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", SETTINGS_MAP.get(DJANGO_ENV, "sr
 os.environ.setdefault("DJANGO_CONFIGURATION", DJANGO_ENV.capitalize())
 
 
-application = ProtocolTypeRouter(
-   { 
-       "http": get_asgi_application(),
-       "websocket": AuthMiddlewareStack(
-           URLRouter(
-               routing.websocket_urlpatterns
-           )
-       )
-   }
-)
+# Standard ASGI application (HTTP only; websockets removed)
+application = get_asgi_application()

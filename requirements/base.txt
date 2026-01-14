@@ -4,6 +4,7 @@ Django
 django-allauth
 django-cleanup
 djangorestframework
+django-configurations
 Pillow
 redis
 requests

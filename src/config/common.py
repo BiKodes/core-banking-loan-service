@@ -1,13 +1,16 @@
 import os
+import secrets
+import string
 from datetime import timedelta
 from os.path import join
 
 
 import environ
 from configurations import Configuration
-from django.utils.crypto import get_random_string
-from kombu import Exchange, Queue
-from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
+# Moved Django imports to avoid premature initialization
+# from django.utils.crypto import get_random_string
+# from kombu import Exchange, Queue
+# from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -23,17 +26,19 @@ class Common(Configuration):
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
-        
+
         # Third party apps
-        "daphne",
         "rest_framework",
         "rest_framework.authtoken",
-        "django_filters",
+        # "django_filters",
         "rest_framework_simplejwt",
-        "rest_framework_simplejwt.token_blacklist",
-        "drf_yasg",
+        # "rest_framework_simplejwt.token_blacklist",
+        # "drf_yasg",
         "corsheaders",
-        "configurations",
+        # "configurations",
+
+        # Local apps
+        "src.loans_management.apps.LoansManagementConfig",
     )
 
     ASGI_APPLICATION = "src.config.asgi.application"
@@ -47,7 +52,6 @@ class Common(Configuration):
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
-        "src.common.middleware.",
     )
 
     CORS_ALLOWED_ORIGINS = [
@@ -58,7 +62,7 @@ class Common(Configuration):
     ALLOWED_HOSTS = ["*"]
     ROOT_URLCONF = "src.config.urls"
     SECRET_KEY = env("DJANGO_SECRET_KEY")
-    WSGI_APPLICATION = "src.wsgi.application"
+    WSGI_APPLICATION = "src.config.wsgi.application"
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     ADMINS = (("Author", "bikocodes@gmail.com"),)
 
@@ -88,8 +92,8 @@ class Common(Configuration):
     USE_TZ = True
     LOGIN_REDIRECT_URL = "/"
 
-    chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)"
-    SECRET_KEY = get_random_string(50, chars)
+    # Generate a random secret key - will be overridden by env variable from DJANGO_SECRET_KEY
+    SECRET_KEY = ''.join(secrets.choice(string.ascii_letters + string.digits + "!@#$%^&*(-_=+)") for _ in range(50))
 
     # Static files (CSS, JavaScript, Images)
   
@@ -231,4 +235,3 @@ class Common(Configuration):
     EMAIL_HOST_USER = ''
     EMAIL_HOST_PASSWORD = ''
 
-    AUTH_USER_MODEL = ''
