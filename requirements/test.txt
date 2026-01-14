@@ -1,0 +1,30 @@
+-r base.txt
+-r ci.txt
+
+djangorestframework-stubs
+django_extensions
+coverage
+codecov
+git-changelog
+flake8
+flake8-black
+flake8-bugbear
+flake8-debugger
+flake8-docstrings
+flake8-isort
+flake8-print
+pep257
+pycodestyle
+pytest
+pytest-django
+pytz
+pytest-xdist
+pytest-cov
+pytest-testmon
+mock
+model-bakery
+tox
+conventional-pre-commit
+black
+time-machine
+invoke
