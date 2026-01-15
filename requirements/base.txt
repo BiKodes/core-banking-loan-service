@@ -8,3 +8,5 @@ django-configurations
 Pillow
 redis
 requests
+openpyxl==3.10.10
+reportlab==4.0.7
