@@ -8,4 +8,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/accounts/', include('src.accounts.urls')),
     path('api/v1/journal/', include('src.journal.urls')),
+    path('api/v1/loans/', include('src.loans_management.urls')),
 ]

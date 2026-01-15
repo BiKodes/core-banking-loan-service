@@ -23,7 +23,7 @@ class LoanDisbursement(PostingRuleBase):
 
         principal_entries = [
             {
-                'account_code': context.get('loans_receivable_code', '1200'),
+                'account_code': context.get('loans_receivable_code', '1210'),
                 'entry_type': 'DR',
                 'amount': amount,
                 'description': f'Loan disbursement - Loan {loan_id}'
@@ -45,13 +45,13 @@ class LoanDisbursement(PostingRuleBase):
         if origination_fee > 0:
             fee_entries = [
                 {
-                    'account_code': context.get('fee_receivable_code', '1210'),
+                    'account_code': context.get('fee_receivable_code', '1220'),
                     'entry_type': 'DR',
                     'amount': origination_fee,
                     'description': f'Loan origination fee receivable - Loan {loan_id}'
                 },
                 {
-                    'account_code': context.get('fee_income_code', '4100'),
+                    'account_code': context.get('fee_income_code', '4210'),
                     'entry_type': 'CR',
                     'amount': origination_fee,
                     'description': f'Fee income - Loan {loan_id}'
@@ -91,13 +91,13 @@ class LoanRepayment(PostingRuleBase):
                 'description': f'Loan repayment received - Loan {loan_id}'
             },
             {
-                'account_code': context.get('loans_receivable_code', '1200'),
+                'account_code': context.get('loans_receivable_code', '1210'),
                 'entry_type': 'CR',
                 'amount': principal,
                 'description': f'Principal repaid - Loan {loan_id}'
             },
             {
-                'account_code': context.get('interest_income_code', '4000'),
+                'account_code': context.get('interest_income_code', '4100'),
                 'entry_type': 'CR',
                 'amount': interest,
                 'description': f'Interest income - Loan {loan_id}'
@@ -133,7 +133,7 @@ class LoanWriteOff(PostingRuleBase):
                 'description': f'Bad debt expense - Loan {loan_id}'
             },
             {
-                'account_code': context.get('loans_receivable_code', '1200'),
+                'account_code': context.get('loans_receivable_code', '1210'),
                 'entry_type': 'CR',
                 'amount': write_off_amount,
                 'description': f'Loan write-off - Loan {loan_id}'
@@ -169,7 +169,7 @@ class LoanInterestAccrual(PostingRuleBase):
                 'description': f'Interest receivable accrual - Loan {loan_id}'
             },
             {
-                'account_code': context.get('interest_income_code', '4000'),
+                'account_code': context.get('interest_income_code', '4100'),
                 'entry_type': 'CR',
                 'amount': accrued_interest,
                 'description': f'Interest income accrual - Loan {loan_id}'
