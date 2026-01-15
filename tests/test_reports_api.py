@@ -19,7 +19,6 @@ class ReportsExportAPITestCase(APITestCase):
         """Set up test data."""
         self.client = APIClient()
         
-        # Create test user
         self.user = User.objects.create_user(
             username='testuser',
             password='testpass123',
@@ -27,7 +26,6 @@ class ReportsExportAPITestCase(APITestCase):
         )
         self.client.force_authenticate(user=self.user)
         
-        # Create test account
         self.cash_account = Account.objects.create(
             code='AC-001',
             name='Cash',
@@ -37,7 +35,6 @@ class ReportsExportAPITestCase(APITestCase):
             is_active=True,
         )
         
-        # Create another account for journal entries
         self.income_account = Account.objects.create(
             code='IN-001',
             name='Sales Revenue',
