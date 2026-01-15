@@ -39,6 +39,10 @@ class Common(Configuration):
 
         # Local apps
         "src.loans_management.apps.LoansManagementConfig",
+        "src.accounts.apps.AccountsConfig",
+        "src.journal.apps.JournalConfig",
+        "src.permissions.apps.PermissionsConfig",
+        "src.reports.apps.ReportsConfig",
     )
 
     ASGI_APPLICATION = "src.config.asgi.application"
