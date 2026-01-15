@@ -34,7 +34,6 @@ class TestAccountBalanceExport:
         
         wb = export_account_balance_report(account_data)
         
-        # Verify workbook is created
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
@@ -65,7 +64,6 @@ class TestTransactionHistoryExport:
         
         wb = export_transaction_history_report(export_data)
         
-        # Verify workbook is created
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
@@ -100,7 +98,6 @@ class TestTrialBalanceExport:
         
         wb = export_trial_balance_report(export_data)
         
-        # Verify workbook is created
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
@@ -141,7 +138,6 @@ class TestBalanceSheetExport:
         
         wb = export_balance_sheet_report(export_data)
         
-        # Verify workbook is created
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
@@ -169,7 +165,6 @@ class TestLoanAgingExport:
         
         wb = export_loan_aging_report(export_data)
         
-        # Verify workbook is created
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
@@ -192,7 +187,6 @@ class TestGetExcelResponse:
         wb = export_account_balance_report(account_data)
         response = get_excel_response('test_report', wb)
         
-        # Verify response headers
         assert response['Content-Type'] == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         assert 'Content-Disposition' in response
         assert 'test_report' in response['Content-Disposition']
