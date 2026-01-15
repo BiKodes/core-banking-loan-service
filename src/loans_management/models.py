@@ -7,13 +7,11 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from src.accounts.models import CURRENCY_CHOICES
+from src.common import TenantAwareModel
 
 
-class TimeStampedModel(models.Model):
-	"""Abstract base with created/updated timestamps."""
-
-	created_at = models.DateTimeField(auto_now_add=True)
-	updated_at = models.DateTimeField(auto_now=True)
+class TimeStampedModel(TenantAwareModel):
+	"""Abstract base with created/updated timestamps and organization scoping."""
 
 	class Meta:
 		abstract = True
@@ -34,12 +32,15 @@ class Borrower(TimeStampedModel):
 class Lender(TimeStampedModel):
 	"""Represents a lender/pool participant."""
 
-	name = models.CharField(max_length=255, unique=True)
+	name = models.CharField(max_length=255)
 	capital_account_code = models.CharField(
 		max_length=20,
 		help_text="Account code representing lender capital (liability).",
 		default="2110",
 	)
+
+	class Meta:
+		unique_together = [('organization', 'name')]
 
 	def __str__(self):
 		return self.name
@@ -129,7 +130,7 @@ class LoanRepayment(TimeStampedModel):
 	)
 
 	loan = models.ForeignKey(Loan, on_delete=models.CASCADE, related_name="repayments")
-	idempotency_key = models.CharField(max_length=100, unique=True)
+	idempotency_key = models.CharField(max_length=100)
 	amount = models.DecimalField(max_digits=14, decimal_places=2)
 	principal_component = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
 	interest_component = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal("0.00"))
@@ -138,6 +139,7 @@ class LoanRepayment(TimeStampedModel):
 	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="PENDING")
 
 	class Meta:
+		unique_together = [('organization', 'idempotency_key')]
 		indexes = [
 			models.Index(fields=["loan", "paid_at"]),
 			models.Index(fields=["idempotency_key"]),

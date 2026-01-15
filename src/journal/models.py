@@ -11,9 +11,10 @@ from django.utils import timezone
 from django.db.models import Sum
 
 from src.accounts.models import Account, DEBIT_CREDIT_TYPES, TRANSACTION_STATUS
+from src.common import TenantAwareModel
 
 
-class JournalEntry(models.Model):
+class JournalEntry(TenantAwareModel):
     """
     Journal Entry model.
 
@@ -22,7 +23,6 @@ class JournalEntry(models.Model):
 
     idempotency_key = models.CharField(
         max_length=255,
-        unique=True,
         db_index=True,
         help_text="Unique key for idempotent transaction processing"
     )
@@ -45,7 +45,6 @@ class JournalEntry(models.Model):
         help_text="Reference to reversing transaction if this was reversed"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
     posted_at = models.DateTimeField(
         null=True,
         blank=True,
@@ -65,6 +64,7 @@ class JournalEntry(models.Model):
     class Meta:
         db_table = 'journal_journalentry'
         ordering = ['-created_at']
+        unique_together = [('organization', 'idempotency_key')]
         indexes = [
             models.Index(fields=['idempotency_key']),
             models.Index(fields=['status']),
@@ -208,7 +208,7 @@ class JournalEntryLine(models.Model):
             )
 
 
-class TransactionIdempotencyCache(models.Model):
+class TransactionIdempotencyCache(TenantAwareModel):
     """
     Cache for idempotent transactions.
 
@@ -218,7 +218,6 @@ class TransactionIdempotencyCache(models.Model):
 
     idempotency_key = models.CharField(
         max_length=255,
-        unique=True,
         db_index=True,
     )
 
@@ -233,10 +232,9 @@ class TransactionIdempotencyCache(models.Model):
         help_text="Hash of original request for validation"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-
     class Meta:
         db_table = 'journal_idempotency_cache'
+        unique_together = [('organization', 'idempotency_key')]
 
     def __str__(self):
         return f"Cache: {self.idempotency_key}"
