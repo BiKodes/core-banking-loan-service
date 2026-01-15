@@ -20,7 +20,32 @@ This service supports a digital lending platform that:
 *   Must comply with banking regulations and audits
     
 *   Processes thousands of transactions per day
-    
+
+High Level Architecture
+-----------------------
+
+![System Architecture Diagram](docs/assets/diagram-export-1-14-2026-2_23_11-AM.png)
+
+### Architecture Overview
+
+The Core Banking Loan Management Service is built on a layered architecture designed for scalability, maintainability, and financial accuracy:
+
+1. **API Layer** – Handles all client requests through RESTful endpoints, managing request validation and response formatting.
+
+2. **Business Logic Layer** – Implements core banking operations including:
+   - Double-entry bookkeeping rules and validation
+   - Loan lifecycle management (disbursement, repayment, write-off)
+   - Account balance calculations and reconciliation
+
+3. **Data Access Layer** – Manages persistent storage and retrieval of:
+   - Chart of Accounts with hierarchical structures
+   - Journal entries and transaction history
+   - Account balances and audit trails
+
+4. **Data Storage** – Relational database ensuring:
+   - ACID compliance for transaction integrity
+   - Concurrent access control through optimistic locking
+   - Data auditability for regulatory compliance
 
 At its core, the system implements strict **double-entry bookkeeping**, ensuring that every financial transaction is balanced, traceable, and auditable.
 
