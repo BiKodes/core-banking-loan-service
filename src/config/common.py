@@ -7,10 +7,6 @@ from os.path import join
 
 import environ
 from configurations import Configuration
-# Moved Django imports to avoid premature initialization
-# from django.utils.crypto import get_random_string
-# from kombu import Exchange, Queue
-# from psycopg2.extensions import ISOLATION_LEVEL_READ_COMMITTED
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +26,7 @@ class Common(Configuration):
         # Third party apps
         "rest_framework",
         "rest_framework.authtoken",
-        # "django_filters",
+        "django_filters",
         "rest_framework_simplejwt",
         # "rest_framework_simplejwt.token_blacklist",
         # "drf_yasg",
@@ -81,9 +77,6 @@ class Common(Configuration):
             "ENGINE": "django.db.backends.postgresql",
         }
     }
-
-    # Enable Connection Pooling
-    # DATABASES['default']['ENGINE'] = 'django_postgrespool'
 
     APPEND_SLASH = False
     TIME_ZONE = "UTC"
@@ -217,6 +210,11 @@ class Common(Configuration):
             "rest_framework_simplejwt.authentication.JWTAuthentication",
             "rest_framework.authentication.TokenAuthentication",
         ),
+        "DEFAULT_FILTER_BACKENDS": [
+            "django_filters.rest_framework.DjangoFilterBackend",
+            "rest_framework.filters.SearchFilter",
+            "rest_framework.filters.OrderingFilter",
+        ],
     }
 
     AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
