@@ -11,6 +11,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db.models import Q, F, Sum
 
+from src.common import TenantAwareModel
+
 
 ACCOUNT_TYPES = (
     ("ASSET", "Asset"),
@@ -85,7 +87,7 @@ class AccountManager(models.Manager):
         return self.filter(is_active=True)
 
 
-class Account(models.Model):
+class Account(TenantAwareModel):
     """
     Chart of Accounts model.
 
@@ -95,7 +97,6 @@ class Account(models.Model):
 
     code = models.CharField(
         max_length=20,
-        unique=True,
         db_index=True,
         help_text="Unique account identifier (e.g., 1000-CASH)"
     )
@@ -150,8 +151,6 @@ class Account(models.Model):
         help_text="Comma-separated custom identifiers for system tagging"
     )
 
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
     version = models.IntegerField(
         default=0,
         help_text="Optimistic locking version number"
@@ -168,7 +167,7 @@ class Account(models.Model):
             models.Index(fields=['is_active']),
             models.Index(fields=['parent']),
         ]
-        unique_together = [('code', 'currency')]
+        unique_together = [('organization', 'code', 'currency')]
 
     def __str__(self):
         return f"{self.code} - {self.name}"
