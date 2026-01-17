@@ -1,20 +1,23 @@
 """Views for accounts app."""
 
-from decimal import Decimal
 from datetime import datetime
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.filters import SearchFilter, OrderingFilter
+from decimal import Decimal
+
+from django.db.models import F, Q, Sum
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Sum, F
 from django.utils import timezone
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.response import Response
 
 from .models import Account, AccountBalance
 from .serializers import (
-    AccountSerializer, AccountListSerializer, AccountHierarchySerializer,
-    AccountBalanceSerializer
+    AccountBalanceSerializer,
+    AccountHierarchySerializer,
+    AccountListSerializer,
+    AccountSerializer,
 )
 
 
@@ -55,20 +58,24 @@ class AccountViewSet(viewsets.ModelViewSet):
                 as_of_date = datetime.fromisoformat(as_of_date)
             except ValueError:
                 return Response(
-                    {'error': 'Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'},
-                    status=status.HTTP_400_BAD_REQUEST
+                    {
+                        'error': 'Invalid date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
         else:
             as_of_date = timezone.now()
 
         balance = account.get_balance(as_of_date)
-        return Response({
-            'account_code': account.code,
-            'account_name': account.name,
-            'balance': float(balance),
-            'as_of_date': as_of_date.isoformat(),
-            'currency': account.currency
-        })
+        return Response(
+            {
+                'account_code': account.code,
+                'account_name': account.name,
+                'balance': float(balance),
+                'as_of_date': as_of_date.isoformat(),
+                'currency': account.currency,
+            }
+        )
 
     @action(detail=False, methods=['get'])
     def hierarchy(self, request):
@@ -77,15 +84,17 @@ class AccountViewSet(viewsets.ModelViewSet):
         if not root_code:
             return Response(
                 {'error': 'root parameter required'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         try:
-            root_account = Account.objects.get(code=root_code, parent__isnull=True)
+            root_account = Account.objects.get(
+                code=root_code, parent__isnull=True
+            )
         except Account.DoesNotExist:
             return Response(
                 {'error': f'Root account {root_code} not found'},
-                status=status.HTTP_404_NOT_FOUND
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         serializer = AccountHierarchySerializer(root_account)
@@ -98,7 +107,7 @@ class AccountViewSet(viewsets.ModelViewSet):
         if not account_type:
             return Response(
                 {'error': 'type parameter required'},
-                status=status.HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         accounts = Account.objects.filter(account_type=account_type)
@@ -119,4 +128,3 @@ class AccountViewSet(viewsets.ModelViewSet):
 
         serializer = AccountBalanceSerializer(snapshots, many=True)
         return Response(serializer.data)
-

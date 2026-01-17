@@ -1,3 +1,3 @@
-from django.db import models
+"""Models for permissions app."""
 
 # Create your models here.

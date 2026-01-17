@@ -1,13 +1,14 @@
 """URL configuration for loans management."""
 
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
+
 from .views import (
     BorrowerViewSet,
     LenderViewSet,
-    LoanViewSet,
-    LoanRepaymentViewSet,
     LoanEventViewSet,
+    LoanRepaymentViewSet,
+    LoanViewSet,
 )
 
 app_name = 'loans_management'

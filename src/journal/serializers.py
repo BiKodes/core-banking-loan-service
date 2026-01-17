@@ -1,14 +1,17 @@
 """Serializers for journal app."""
 
-from rest_framework import serializers
-from django.db import transaction
 from decimal import Decimal
 
+from django.db import transaction
+from rest_framework import serializers
+
+from src.accounts.models import Account
+
 from .models import (
-    JournalEntry, JournalEntryLine, TransactionIdempotencyCache,
-    TRANSACTION_STATUS
+    JournalEntry,
+    JournalEntryLine,
+    TransactionIdempotencyCache,
 )
-from accounts.models import Account
 
 
 class JournalEntryLineSerializer(serializers.ModelSerializer):
@@ -20,8 +23,14 @@ class JournalEntryLineSerializer(serializers.ModelSerializer):
     class Meta:
         model = JournalEntryLine
         fields = [
-            'id', 'account', 'account_code', 'account_name',
-            'entry_type', 'amount', 'description', 'created_at'
+            'id',
+            'account',
+            'account_code',
+            'account_name',
+            'entry_type',
+            'amount',
+            'description',
+            'created_at',
         ]
         read_only_fields = ['id', 'created_at']
 
@@ -37,23 +46,37 @@ class JournalEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = JournalEntry
         fields = [
-            'id', 'idempotency_key', 'description', 'status',
-            'lines', 'total_debit', 'total_credit', 'is_balanced',
-            'reversed_by', 'created_at', 'updated_at'
+            'id',
+            'idempotency_key',
+            'description',
+            'status',
+            'lines',
+            'total_debit',
+            'total_credit',
+            'is_balanced',
+            'reversed_by',
+            'created_at',
+            'updated_at',
         ]
         read_only_fields = fields
 
     def get_total_debit(self, obj):
         """Calculate total debit amount."""
-        return float(obj.lines.filter(entry_type='DR').aggregate(
-            total=serializers.Sum('amount')
-        )['total'] or 0)
+        return float(
+            obj.lines.filter(entry_type='DR').aggregate(
+                total=serializers.Sum('amount')
+            )['total']
+            or 0
+        )
 
     def get_total_credit(self, obj):
         """Calculate total credit amount."""
-        return float(obj.lines.filter(entry_type='CR').aggregate(
-            total=serializers.Sum('amount')
-        )['total'] or 0)
+        return float(
+            obj.lines.filter(entry_type='CR').aggregate(
+                total=serializers.Sum('amount')
+            )['total']
+            or 0
+        )
 
     def get_is_balanced(self, obj):
         """Check if journal entry is balanced."""
@@ -66,18 +89,24 @@ class JournalEntryLineCreateUpdateSerializer(serializers.Serializer):
     account_code = serializers.CharField(max_length=20)
     entry_type = serializers.ChoiceField(choices=['DR', 'CR'])
     amount = serializers.DecimalField(max_digits=19, decimal_places=2)
-    description = serializers.CharField(max_length=500, required=False, allow_blank=True)
+    description = serializers.CharField(
+        max_length=500, required=False, allow_blank=True
+    )
 
     def validate_amount(self, value):
         """Validate amount is positive."""
         if value <= 0:
-            raise serializers.ValidationError("Amount must be greater than zero.")
+            raise serializers.ValidationError(
+                "Amount must be greater than zero."
+            )
         return value
 
     def validate_entry_type(self, value):
         """Validate entry type is valid."""
         if value not in ['DR', 'CR']:
-            raise serializers.ValidationError("Entry type must be 'DR' or 'CR'.")
+            raise serializers.ValidationError(
+                "Entry type must be 'DR' or 'CR'."
+            )
         return value
 
 
@@ -90,7 +119,9 @@ class JournalEntryCreateSerializer(serializers.Serializer):
 
     def validate_idempotency_key(self, value):
         """Validate idempotency key is unique."""
-        if TransactionIdempotencyCache.objects.filter(idempotency_key=value).exists():
+        if TransactionIdempotencyCache.objects.filter(
+            idempotency_key=value
+        ).exists():
             raise serializers.ValidationError(
                 f"Transaction with idempotency key '{value}' already exists."
             )
@@ -99,9 +130,13 @@ class JournalEntryCreateSerializer(serializers.Serializer):
     def validate_lines(self, value):
         """Validate lines list."""
         if not value:
-            raise serializers.ValidationError("At least one line entry is required.")
+            raise serializers.ValidationError(
+                "At least one line entry is required."
+            )
         if len(value) < 2:
-            raise serializers.ValidationError("At least two line entries are required (debit and credit).")
+            raise serializers.ValidationError(
+                "At least two line entries are required (debit and credit)."
+            )
         return value
 
     def validate(self, data):
@@ -129,7 +164,9 @@ class JournalEntryCreateSerializer(serializers.Serializer):
         ).count()
 
         if existing_accounts != len(account_codes):
-            raise serializers.ValidationError("One or more account codes do not exist.")
+            raise serializers.ValidationError(
+                "One or more account codes do not exist."
+            )
 
         return data
 
@@ -140,14 +177,14 @@ class JournalEntryCreateSerializer(serializers.Serializer):
         description = validated_data['description']
         lines_data = validated_data['lines']
 
-        idempotency_cache = TransactionIdempotencyCache.objects.create(
+        _idempotency_cache = TransactionIdempotencyCache.objects.create(
             idempotency_key=idempotency_key
         )
 
         journal_entry = JournalEntry.objects.create(
             idempotency_key=idempotency_key,
             description=description,
-            status='POSTED'
+            status='POSTED',
         )
 
         for line_data in lines_data:
@@ -157,7 +194,7 @@ class JournalEntryCreateSerializer(serializers.Serializer):
                 account=account,
                 entry_type=line_data['entry_type'],
                 amount=line_data['amount'],
-                description=line_data.get('description', '')
+                description=line_data.get('description', ''),
             )
 
         return journal_entry
@@ -171,7 +208,9 @@ class JournalEntryReverseSerializer(serializers.Serializer):
 
     def validate_idempotency_key(self, value):
         """Validate idempotency key is unique."""
-        if TransactionIdempotencyCache.objects.filter(idempotency_key=value).exists():
+        if TransactionIdempotencyCache.objects.filter(
+            idempotency_key=value
+        ).exists():
             raise serializers.ValidationError(
                 f"Transaction with idempotency key '{value}' already exists."
             )
@@ -189,10 +228,14 @@ class JournalEntryReverseSerializer(serializers.Serializer):
             raise serializers.ValidationError("Journal entry not provided.")
 
         if journal_entry.status == 'REVERSED':
-            raise serializers.ValidationError("Journal entry is already reversed.")
+            raise serializers.ValidationError(
+                "Journal entry is already reversed."
+            )
 
         if journal_entry.status != 'POSTED':
-            raise serializers.ValidationError("Only posted journal entries can be reversed.")
+            raise serializers.ValidationError(
+                "Only posted journal entries can be reversed."
+            )
 
         TransactionIdempotencyCache.objects.create(
             idempotency_key=idempotency_key
@@ -200,7 +243,8 @@ class JournalEntryReverseSerializer(serializers.Serializer):
 
         reversed_entry = journal_entry.reverse(
             idempotency_key=idempotency_key,
-            description=description or f"Reversal of {journal_entry.description}"
+            description=description
+            or f"Reversal of {journal_entry.description}",
         )
 
         return reversed_entry

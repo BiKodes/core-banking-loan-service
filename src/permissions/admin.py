@@ -1,3 +1,3 @@
-from django.contrib import admin
+"""Admin configuration for permissions app."""
 
 # Register your models here.

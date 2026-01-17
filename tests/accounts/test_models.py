@@ -1,9 +1,9 @@
 """Unit tests for Account model."""
 
-from decimal import Decimal
-from django.test import TestCase
 from django.core.exceptions import ValidationError
-from src.accounts.models import Account, ACCOUNT_TYPES
+from django.test import TestCase
+
+from src.accounts.models import ACCOUNT_TYPES, Account
 
 
 class AccountModelTests(TestCase):
@@ -16,7 +16,7 @@ class AccountModelTests(TestCase):
             name="Assets",
             account_type="ASSET",
             currency="KES",
-            is_control_account=True
+            is_control_account=True,
         )
 
         self.current_assets = Account.objects.create(
@@ -25,7 +25,7 @@ class AccountModelTests(TestCase):
             account_type="ASSET",
             currency="KES",
             parent=self.assets,
-            is_control_account=True
+            is_control_account=True,
         )
 
         self.cash = Account.objects.create(
@@ -33,7 +33,7 @@ class AccountModelTests(TestCase):
             name="Cash Account",
             account_type="ASSET",
             currency="KES",
-            parent=self.current_assets
+            parent=self.current_assets,
         )
 
     def test_account_creation(self):
@@ -43,7 +43,7 @@ class AccountModelTests(TestCase):
             name="Bank Account",
             account_type="ASSET",
             currency="KES",
-            parent=self.current_assets
+            parent=self.current_assets,
         )
         self.assertEqual(account.code, "1120")
         self.assertEqual(account.name, "Bank Account")
@@ -77,7 +77,7 @@ class AccountModelTests(TestCase):
             name="Non-Control Account",
             account_type="ASSET",
             currency="KES",
-            parent=self.current_assets
+            parent=self.current_assets,
         )
 
         with self.assertRaises(ValidationError):
@@ -86,7 +86,7 @@ class AccountModelTests(TestCase):
                 name="Child Account",
                 account_type="ASSET",
                 currency="KES",
-                parent=non_control
+                parent=non_control,
             )
 
     def test_circular_hierarchy_prevention(self):
@@ -106,7 +106,7 @@ class AccountModelTests(TestCase):
             name="System Account",
             account_type="ASSET",
             currency="KES",
-            is_system_account=True
+            is_system_account=True,
         )
 
         with self.assertRaises(ValidationError):
@@ -118,7 +118,7 @@ class AccountModelTests(TestCase):
             code="2000",
             name="Test Account",
             account_type="ASSET",
-            currency="KES"
+            currency="KES",
         )
 
         account.is_active = False
@@ -132,7 +132,7 @@ class AccountModelTests(TestCase):
             name="KES Account",
             account_type="ASSET",
             currency="KES",
-            parent=self.current_assets
+            parent=self.current_assets,
         )
 
         ugx_account = Account.objects.create(
@@ -140,7 +140,7 @@ class AccountModelTests(TestCase):
             name="UGX Account",
             account_type="ASSET",
             currency="UGX",
-            parent=self.current_assets
+            parent=self.current_assets,
         )
 
         self.assertEqual(ksh_account.currency, "KES")
@@ -157,6 +157,6 @@ class AccountModelTests(TestCase):
                 code=f"TYPE-{account_type}",
                 name=f"{account_type} Test Account",
                 account_type=account_type,
-                currency="KES"
+                currency="KES",
             )
             self.assertEqual(account.account_type, account_type)

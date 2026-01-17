@@ -4,10 +4,8 @@ import string
 from datetime import timedelta
 from os.path import join
 
-
 import environ
 from configurations import Configuration
-
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -22,18 +20,14 @@ class Common(Configuration):
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
-
         # Third party apps
         "rest_framework",
         "rest_framework.authtoken",
         "django_filters",
         "rest_framework_simplejwt",
-        # "rest_framework_simplejwt.token_blacklist",
-        # "drf_yasg",
         "corsheaders",
-        # "configurations",
-
         # Local apps
+        "src.common.apps.CommonConfig",
         "src.loans_management.apps.LoansManagementConfig",
         "src.accounts.apps.AccountsConfig",
         "src.journal.apps.JournalConfig",
@@ -66,12 +60,11 @@ class Common(Configuration):
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
     ADMINS = (("Author", "bikocodes@gmail.com"),)
 
-    
     DATABASES = {
-       'default': {
-           "NAME": env.str("POSTGRES_NAME"),
+        'default': {
+            "NAME": env.str("POSTGRES_NAME"),
             "USER": env.str("POSTGRES_USER"),
-            "PASSWORD":env.str ("POSTGRES_PASSWORD"),
+            "PASSWORD": env.str("POSTGRES_PASSWORD"),
             "HOST": env.str("POSTGRES_HOST", "localhost"),
             "PORT": env.int("POSTGRES_PORT", 5432),
             "ENGINE": "django.db.backends.postgresql",
@@ -82,7 +75,7 @@ class Common(Configuration):
     TIME_ZONE = "UTC"
     LANGUAGE_CODE = "en-us"
 
-    # If you set this to False, Django will make some optimizations so 
+    # If you set this to False, Django will make some optimizations so
     # as not to load the internationalization machinery.
     USE_I18N = False
     USE_L10N = True
@@ -90,10 +83,13 @@ class Common(Configuration):
     LOGIN_REDIRECT_URL = "/"
 
     # Generate a random secret key - will be overridden by env variable from DJANGO_SECRET_KEY
-    SECRET_KEY = ''.join(secrets.choice(string.ascii_letters + string.digits + "!@#$%^&*(-_=+)") for _ in range(50))
+    SECRET_KEY = ''.join(
+        secrets.choice(string.ascii_letters + string.digits + "!@#$%^&*(-_=+)")
+        for _ in range(50)
+    )
 
     # Static files (CSS, JavaScript, Images)
-  
+
     STATIC_ROOT = os.path.normpath(join(os.path.dirname(BASE_DIR), "static"))
     STATICFILES_DIRS = []
     STATIC_URL = "/static/"
@@ -236,4 +232,3 @@ class Common(Configuration):
     EMAIL_PORT = 587
     EMAIL_HOST_USER = ''
     EMAIL_HOST_PASSWORD = ''
-

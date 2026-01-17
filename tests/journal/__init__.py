@@ -1,11 +1,15 @@
 """Tests for journal app models."""
 
-from django.test import TestCase
-from django.utils import timezone
 from decimal import Decimal
 
+from django.test import TestCase
+
 from src.accounts.models import Account
-from src.journal.models import JournalEntry, JournalEntryLine, TransactionIdempotencyCache
+from src.journal.models import (
+    JournalEntry,
+    JournalEntryLine,
+    TransactionIdempotencyCache,
+)
 
 
 class JournalEntryModelTests(TestCase):
@@ -19,7 +23,7 @@ class JournalEntryModelTests(TestCase):
             name='Cash Account',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
         cls.loans_receivable = Account.objects.create(
@@ -27,7 +31,7 @@ class JournalEntryModelTests(TestCase):
             name='Loans Receivable',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
         cls.fee_income = Account.objects.create(
@@ -35,7 +39,7 @@ class JournalEntryModelTests(TestCase):
             name='Loan Origination Fee Income',
             account_type='INCOME',
             currency='KES',
-            debit_or_credit='CR'
+            debit_or_credit='CR',
         )
 
     def test_create_journal_entry(self):
@@ -43,7 +47,7 @@ class JournalEntryModelTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='test-entry-001',
             description='Test journal entry',
-            status='POSTED'
+            status='POSTED',
         )
 
         self.assertEqual(je.status, 'POSTED')
@@ -56,7 +60,7 @@ class JournalEntryModelTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='test-balanced-001',
             description='Loan disbursement',
-            status='POSTED'
+            status='POSTED',
         )
 
         JournalEntryLine.objects.create(
@@ -64,7 +68,7 @@ class JournalEntryModelTests(TestCase):
             account=self.loans_receivable,
             entry_type='DR',
             amount=Decimal('10000.00'),
-            description='Loan disbursement principal'
+            description='Loan disbursement principal',
         )
 
         JournalEntryLine.objects.create(
@@ -72,7 +76,7 @@ class JournalEntryModelTests(TestCase):
             account=self.cash_account,
             entry_type='CR',
             amount=Decimal('10000.00'),
-            description='Cash out'
+            description='Cash out',
         )
 
         self.assertTrue(je.is_balanced())
@@ -83,21 +87,21 @@ class JournalEntryModelTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='test-unbalanced-001',
             description='Unbalanced entry',
-            status='PENDING'
+            status='PENDING',
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.loans_receivable,
             entry_type='DR',
-            amount=Decimal('10000.00')
+            amount=Decimal('10000.00'),
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.cash_account,
             entry_type='CR',
-            amount=Decimal('5000.00')
+            amount=Decimal('5000.00'),
         )
 
         self.assertFalse(je.is_balanced())
@@ -107,26 +111,26 @@ class JournalEntryModelTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='test-reverse-001',
             description='Original loan disbursement',
-            status='POSTED'
+            status='POSTED',
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.loans_receivable,
             entry_type='DR',
-            amount=Decimal('10000.00')
+            amount=Decimal('10000.00'),
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.cash_account,
             entry_type='CR',
-            amount=Decimal('10000.00')
+            amount=Decimal('10000.00'),
         )
 
         reversed_entry = je.reverse(
             idempotency_key='test-reverse-001-reversal',
-            description='Reversal of original'
+            description='Reversal of original',
         )
 
         je.refresh_from_db()
@@ -147,28 +151,28 @@ class JournalEntryModelTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='test-total-001',
             description='Multi-line entry',
-            status='POSTED'
+            status='POSTED',
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.loans_receivable,
             entry_type='DR',
-            amount=Decimal('5000.00')
+            amount=Decimal('5000.00'),
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.cash_account,
             entry_type='DR',
-            amount=Decimal('3000.00')
+            amount=Decimal('3000.00'),
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.fee_income,
             entry_type='CR',
-            amount=Decimal('8000.00')
+            amount=Decimal('8000.00'),
         )
 
         total_dr = je.get_total('DR')
@@ -187,7 +191,7 @@ class JournalEntryLineModelTests(TestCase):
         cls.je = JournalEntry.objects.create(
             idempotency_key='test-line-001',
             description='Test entry for lines',
-            status='POSTED'
+            status='POSTED',
         )
 
         cls.account = Account.objects.create(
@@ -195,7 +199,7 @@ class JournalEntryLineModelTests(TestCase):
             name='Cash',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
     def test_create_journal_entry_line(self):
@@ -205,7 +209,7 @@ class JournalEntryLineModelTests(TestCase):
             account=self.account,
             entry_type='DR',
             amount=Decimal('1000.00'),
-            description='Cash receipt'
+            description='Cash receipt',
         )
 
         self.assertEqual(line.entry_type, 'DR')
@@ -221,7 +225,7 @@ class JournalEntryLineModelTests(TestCase):
             journal_entry=self.je,
             account=self.account,
             entry_type='INVALID',
-            amount=Decimal('100.00')
+            amount=Decimal('100.00'),
         )
 
         with self.assertRaises(ValidationError):
@@ -259,7 +263,7 @@ class TransactionIdempotencyCacheTests(TestCase):
         """Test that idempotency cache prevents duplicate processing."""
         idempotency_key = 'prevent-dup-789'
 
-        cache1 = TransactionIdempotencyCache.objects.create(
+        TransactionIdempotencyCache.objects.create(
             idempotency_key=idempotency_key
         )
 
@@ -272,5 +276,5 @@ class TransactionIdempotencyCacheTests(TestCase):
             TransactionIdempotencyCache.objects.filter(
                 idempotency_key=idempotency_key
             ).count(),
-            1
+            1,
         )

@@ -3,16 +3,15 @@ Core Banking Loan Service - Account Management Models
 """
 
 from collections import OrderedDict
-from decimal import Decimal
 from datetime import datetime
+from decimal import Decimal
 
-from django.db import models, transaction
 from django.core.exceptions import ValidationError
+from django.db import models, transaction
+from django.db.models import F, Q, Sum
 from django.utils import timezone
-from django.db.models import Q, F, Sum
 
-from src.common import TenantAwareModel
-
+from src.common.models import TenantAwareModel
 
 ACCOUNT_TYPES = (
     ("ASSET", "Asset"),
@@ -40,6 +39,7 @@ TRANSACTION_STATUS = (
     ("VOIDED", "Voided"),
 )
 
+
 def validate_account_identifiers(value):
     """Validate account identifiers are comma-separated valid strings."""
     if not value:
@@ -50,6 +50,7 @@ def validate_account_identifiers(value):
             raise ValidationError(
                 f"Invalid identifier '{identifier}'. Must be alphanumeric with underscores."
             )
+
 
 class AccountManager(models.Manager):
     """Custom manager for accounts with safety constraints."""
@@ -98,29 +99,26 @@ class Account(TenantAwareModel):
     code = models.CharField(
         max_length=20,
         db_index=True,
-        help_text="Unique account identifier (e.g., 1000-CASH)"
+        help_text="Unique account identifier (e.g., 1000-CASH)",
     )
     name = models.CharField(
-        max_length=255,
-        help_text="Account name (e.g., M-Pesa Cash Account)"
+        max_length=255, help_text="Account name (e.g., M-Pesa Cash Account)"
     )
     description = models.TextField(
-        blank=True,
-        null=True,
-        help_text="Detailed account description"
+        blank=True, null=True, help_text="Detailed account description"
     )
 
     account_type = models.CharField(
         max_length=20,
         choices=ACCOUNT_TYPES,
         db_index=True,
-        help_text="Type of account: ASSET, LIABILITY, EQUITY, INCOME, EXPENSE"
+        help_text="Type of account: ASSET, LIABILITY, EQUITY, INCOME, EXPENSE",
     )
     currency = models.CharField(
         max_length=3,
         choices=CURRENCY_CHOICES,
         default="KES",
-        help_text="Primary currency for this account"
+        help_text="Primary currency for this account",
     )
 
     parent = models.ForeignKey(
@@ -129,31 +127,28 @@ class Account(TenantAwareModel):
         blank=True,
         on_delete=models.PROTECT,
         related_name='children',
-        help_text="Parent account for hierarchical structure"
+        help_text="Parent account for hierarchical structure",
     )
 
     is_active = models.BooleanField(
-        default=True,
-        help_text="Whether account is active and can be used"
+        default=True, help_text="Whether account is active and can be used"
     )
     is_control_account = models.BooleanField(
         default=False,
-        help_text="Control accounts are parent accounts only (no transactions)"
+        help_text="Control accounts are parent accounts only (no transactions)",
     )
     is_system_account = models.BooleanField(
-        default=False,
-        help_text="System accounts cannot be modified or deleted"
+        default=False, help_text="System accounts cannot be modified or deleted"
     )
 
     identifiers = models.TextField(
         blank=True,
         validators=[validate_account_identifiers],
-        help_text="Comma-separated custom identifiers for system tagging"
+        help_text="Comma-separated custom identifiers for system tagging",
     )
 
     version = models.IntegerField(
-        default=0,
-        help_text="Optimistic locking version number"
+        default=0, help_text="Optimistic locking version number"
     )
 
     objects = AccountManager()
@@ -188,13 +183,17 @@ class Account(TenantAwareModel):
             current = self.parent
             while current:
                 if current.id == self.id:
-                    raise ValidationError("Circular account hierarchy detected.")
+                    raise ValidationError(
+                        "Circular account hierarchy detected."
+                    )
                 current = current.parent
 
         if self.is_system_account and self.pk:
             original = Account.objects.get(pk=self.pk)
             if not original.is_system_account:
-                raise ValidationError("Cannot convert account to system account.")
+                raise ValidationError(
+                    "Cannot convert account to system account."
+                )
 
     def delete(self, *args, **kwargs):
         """Prevent deletion of accounts with transactions."""
@@ -207,7 +206,6 @@ class Account(TenantAwareModel):
                 f"Cannot delete account '{self.name}' with existing transactions."
             )
         super().delete(*args, **kwargs)
-
 
     def get_balance(self, as_of_date=None):
         """
@@ -224,7 +222,7 @@ class Account(TenantAwareModel):
 
         entries = self.entries.filter(
             transaction__created_at__lte=as_of_date,
-            transaction__status="POSTED"
+            transaction__status="POSTED",
         )
 
         debit_total = entries.filter(entry_type="DR").aggregate(
@@ -253,16 +251,14 @@ class Account(TenantAwareModel):
     def debit_total(self):
         """Get total debits for this account."""
         return self.entries.filter(
-            entry_type="DR",
-            transaction__status="POSTED"
+            entry_type="DR", transaction__status="POSTED"
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
     @property
     def credit_total(self):
         """Get total credits for this account."""
         return self.entries.filter(
-            entry_type="CR",
-            transaction__status="POSTED"
+            entry_type="CR", transaction__status="POSTED"
         ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
 
     def get_hierarchy_path(self):
@@ -289,34 +285,31 @@ class AccountBalance(models.Model):
     """
 
     account = models.ForeignKey(
-        Account,
-        on_delete=models.CASCADE,
-        related_name='balance_snapshots'
+        Account, on_delete=models.CASCADE, related_name='balance_snapshots'
     )
 
     balance_date = models.DateField(
-        db_index=True,
-        help_text="Date of balance snapshot"
+        db_index=True, help_text="Date of balance snapshot"
     )
 
     balance = models.DecimalField(
         max_digits=15,
         decimal_places=2,
-        help_text="Account balance on this date"
+        help_text="Account balance on this date",
     )
 
     debit_total = models.DecimalField(
         max_digits=15,
         decimal_places=2,
         default=0,
-        help_text="Total debits up to this date"
+        help_text="Total debits up to this date",
     )
 
     credit_total = models.DecimalField(
         max_digits=15,
         decimal_places=2,
         default=0,
-        help_text="Total credits up to this date"
+        help_text="Total credits up to this date",
     )
 
     updated_at = models.DateTimeField(auto_now=True)

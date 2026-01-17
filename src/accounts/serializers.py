@@ -1,7 +1,9 @@
 """Serializers for accounts app."""
 
 from decimal import Decimal
+
 from rest_framework import serializers
+
 from .models import Account, AccountBalance
 
 
@@ -11,17 +13,33 @@ class AccountSerializer(serializers.ModelSerializer):
     current_balance = serializers.SerializerMethodField()
     debit_total = serializers.SerializerMethodField()
     credit_total = serializers.SerializerMethodField()
-    hierarchy_string = serializers.CharField(source='get_hierarchy_string', read_only=True)
+    hierarchy_string = serializers.CharField(
+        source='get_hierarchy_string', read_only=True
+    )
     children_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Account
         fields = [
-            'id', 'code', 'name', 'description', 'account_type', 'currency',
-            'parent', 'is_active', 'is_control_account', 'is_system_account',
-            'identifiers', 'created_at', 'updated_at', 'version',
-            'current_balance', 'debit_total', 'credit_total',
-            'hierarchy_string', 'children_count'
+            'id',
+            'code',
+            'name',
+            'description',
+            'account_type',
+            'currency',
+            'parent',
+            'is_active',
+            'is_control_account',
+            'is_system_account',
+            'identifiers',
+            'created_at',
+            'updated_at',
+            'version',
+            'current_balance',
+            'debit_total',
+            'credit_total',
+            'hierarchy_string',
+            'children_count',
         ]
         read_only_fields = ['created_at', 'updated_at', 'version']
 
@@ -46,13 +64,21 @@ class AccountListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for account lists."""
 
     current_balance = serializers.SerializerMethodField()
-    account_type_display = serializers.CharField(source='get_account_type_display', read_only=True)
+    account_type_display = serializers.CharField(
+        source='get_account_type_display', read_only=True
+    )
 
     class Meta:
         model = Account
         fields = [
-            'id', 'code', 'name', 'account_type', 'account_type_display',
-            'currency', 'is_active', 'current_balance'
+            'id',
+            'code',
+            'name',
+            'account_type',
+            'account_type_display',
+            'currency',
+            'is_active',
+            'current_balance',
         ]
 
     def get_current_balance(self, obj):
@@ -68,7 +94,14 @@ class AccountHierarchySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Account
-        fields = ['id', 'code', 'name', 'account_type', 'current_balance', 'children']
+        fields = [
+            'id',
+            'code',
+            'name',
+            'account_type',
+            'current_balance',
+            'children',
+        ]
 
     def get_children(self, obj):
         """Recursively serialize child accounts."""
@@ -90,8 +123,15 @@ class AccountBalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountBalance
         fields = [
-            'id', 'account', 'account_code', 'account_name',
-            'balance_date', 'balance', 'debit_total', 'credit_total', 'updated_at'
+            'id',
+            'account',
+            'account_code',
+            'account_name',
+            'balance_date',
+            'balance',
+            'debit_total',
+            'credit_total',
+            'updated_at',
         ]
         read_only_fields = ['updated_at']
 
@@ -101,7 +141,14 @@ class AccountBalanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = AccountBalance
         fields = [
-            'id', 'account', 'account_code', 'account_name',
-            'balance_date', 'balance', 'debit_total', 'credit_total', 'updated_at'
+            'id',
+            'account',
+            'account_code',
+            'account_name',
+            'balance_date',
+            'balance',
+            'debit_total',
+            'credit_total',
+            'updated_at',
         ]
         read_only_fields = ['updated_at']

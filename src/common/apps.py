@@ -11,15 +11,15 @@ class CommonConfig(AppConfig):
     """
     Configuration for the 'common' Django app.
     """
-    
+
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'src.common'
     verbose_name = 'Common / Multitenancy'
-    
+
     def ready(self):
         """
         Initialize the app.
-        
+
         This method is called when Django starts and all models are loaded.
         """
         from . import admin  # noqa: F401

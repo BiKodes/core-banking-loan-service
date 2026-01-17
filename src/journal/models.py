@@ -5,13 +5,14 @@ Handles all journal entry and transaction posting logic.
 """
 
 from decimal import Decimal
-from django.db import models, transaction
-from django.core.exceptions import ValidationError
-from django.utils import timezone
-from django.db.models import Sum
 
-from src.accounts.models import Account, DEBIT_CREDIT_TYPES, TRANSACTION_STATUS
-from src.common import TenantAwareModel
+from django.core.exceptions import ValidationError
+from django.db import models, transaction
+from django.db.models import Sum
+from django.utils import timezone
+
+from src.accounts.models import DEBIT_CREDIT_TYPES, TRANSACTION_STATUS, Account
+from src.common.models import TenantAwareModel
 
 
 class JournalEntry(TenantAwareModel):
@@ -24,16 +25,16 @@ class JournalEntry(TenantAwareModel):
     idempotency_key = models.CharField(
         max_length=255,
         db_index=True,
-        help_text="Unique key for idempotent transaction processing"
+        help_text="Unique key for idempotent transaction processing",
     )
     description = models.TextField(help_text="Transaction description")
-    
+
     status = models.CharField(
         max_length=20,
         choices=TRANSACTION_STATUS,
         default="POSTED",
         db_index=True,
-        help_text="Transaction status"
+        help_text="Transaction status",
     )
 
     reversed_by = models.ForeignKey(
@@ -42,23 +43,18 @@ class JournalEntry(TenantAwareModel):
         blank=True,
         on_delete=models.SET_NULL,
         related_name='reverses',
-        help_text="Reference to reversing transaction if this was reversed"
+        help_text="Reference to reversing transaction if this was reversed",
     )
 
     posted_at = models.DateTimeField(
-        null=True,
-        blank=True,
-        help_text="When the transaction was posted"
+        null=True, blank=True, help_text="When the transaction was posted"
     )
     created_by = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="User who created the transaction"
+        max_length=255, blank=True, help_text="User who created the transaction"
     )
 
     version = models.IntegerField(
-        default=0,
-        help_text="Optimistic locking version number"
+        default=0, help_text="Optimistic locking version number"
     )
 
     class Meta:
@@ -157,31 +153,26 @@ class JournalEntryLine(models.Model):
         JournalEntry,
         on_delete=models.CASCADE,
         related_name='entries',
-        help_text="Parent journal entry"
+        help_text="Parent journal entry",
     )
 
     account = models.ForeignKey(
         Account,
         on_delete=models.PROTECT,
         related_name='journal_entries',
-        help_text="Account for this entry line"
+        help_text="Account for this entry line",
     )
 
     entry_type = models.CharField(
-        max_length=2,
-        choices=DEBIT_CREDIT_TYPES,
-        help_text="Debit or Credit"
+        max_length=2, choices=DEBIT_CREDIT_TYPES, help_text="Debit or Credit"
     )
 
     amount = models.DecimalField(
-        max_digits=15,
-        decimal_places=2,
-        help_text="Entry amount"
+        max_digits=15, decimal_places=2, help_text="Entry amount"
     )
 
     description = models.TextField(
-        blank=True,
-        help_text="Line-specific description"
+        blank=True, help_text="Line-specific description"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -203,9 +194,7 @@ class JournalEntryLine(models.Model):
             raise ValidationError("Amount must be greater than zero.")
 
         if self.account.is_control_account:
-            raise ValidationError(
-                "Cannot make entries into control accounts."
-            )
+            raise ValidationError("Cannot make entries into control accounts.")
 
 
 class TransactionIdempotencyCache(TenantAwareModel):
@@ -224,12 +213,11 @@ class TransactionIdempotencyCache(TenantAwareModel):
     journal_entry = models.OneToOneField(
         JournalEntry,
         on_delete=models.CASCADE,
-        help_text="The successfully processed transaction"
+        help_text="The successfully processed transaction",
     )
 
     request_hash = models.CharField(
-        max_length=255,
-        help_text="Hash of original request for validation"
+        max_length=255, help_text="Hash of original request for validation"
     )
 
     class Meta:
@@ -238,4 +226,3 @@ class TransactionIdempotencyCache(TenantAwareModel):
 
     def __str__(self):
         return f"Cache: {self.idempotency_key}"
-

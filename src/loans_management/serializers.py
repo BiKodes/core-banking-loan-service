@@ -1,25 +1,41 @@
 """Serializers for loan management."""
 
 from decimal import Decimal
+
 from django.utils import timezone
 from rest_framework import serializers
 
 from src.accounts.posting_rules.factory import PostingRuleFactory
 from src.journal.models import JournalEntry
-from .models import Borrower, Lender, Loan, LoanRepayment, LoanEvent
+
+from .models import Borrower, Lender, Loan, LoanEvent, LoanRepayment
 
 
 class BorrowerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Borrower
-        fields = ['id', 'full_name', 'phone_number', 'email', 'id_number', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'full_name',
+            'phone_number',
+            'email',
+            'id_number',
+            'created_at',
+            'updated_at',
+        ]
         read_only_fields = ['created_at', 'updated_at']
 
 
 class LenderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lender
-        fields = ['id', 'name', 'capital_account_code', 'created_at', 'updated_at']
+        fields = [
+            'id',
+            'name',
+            'capital_account_code',
+            'created_at',
+            'updated_at',
+        ]
         read_only_fields = ['created_at', 'updated_at']
 
 
@@ -30,43 +46,90 @@ class LoanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loan
         fields = [
-            'id', 'borrower', 'lender', 'principal_amount', 'currency', 'interest_rate',
-            'term_months', 'origination_fee', 'status', 'disbursed_at', 'due_date',
-            'maturity_date', 'outstanding_principal', 'accrued_interest', 'version',
-            'loans_receivable_code', 'cash_account_code', 'fee_receivable_code', 'fee_income_code',
-            'interest_income_code', 'interest_receivable_code', 'bad_debt_expense_code',
-            'created_at', 'updated_at'
+            'id',
+            'borrower',
+            'lender',
+            'principal_amount',
+            'currency',
+            'interest_rate',
+            'term_months',
+            'origination_fee',
+            'status',
+            'disbursed_at',
+            'due_date',
+            'maturity_date',
+            'outstanding_principal',
+            'accrued_interest',
+            'version',
+            'loans_receivable_code',
+            'cash_account_code',
+            'fee_receivable_code',
+            'fee_income_code',
+            'interest_income_code',
+            'interest_receivable_code',
+            'bad_debt_expense_code',
+            'created_at',
+            'updated_at',
         ]
-        read_only_fields = ['status', 'disbursed_at', 'outstanding_principal', 'accrued_interest', 'created_at', 'updated_at', 'version']
+        read_only_fields = [
+            'status',
+            'disbursed_at',
+            'outstanding_principal',
+            'accrued_interest',
+            'created_at',
+            'updated_at',
+            'version',
+        ]
 
 
 class LoanCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Loan
         fields = [
-            'borrower', 'lender', 'principal_amount', 'currency', 'interest_rate',
-            'term_months', 'origination_fee', 'due_date', 'maturity_date',
-            'loans_receivable_code', 'cash_account_code', 'fee_receivable_code', 'fee_income_code',
-            'interest_income_code', 'interest_receivable_code', 'bad_debt_expense_code'
+            'borrower',
+            'lender',
+            'principal_amount',
+            'currency',
+            'interest_rate',
+            'term_months',
+            'origination_fee',
+            'due_date',
+            'maturity_date',
+            'loans_receivable_code',
+            'cash_account_code',
+            'fee_receivable_code',
+            'fee_income_code',
+            'interest_income_code',
+            'interest_receivable_code',
+            'bad_debt_expense_code',
         ]
 
 
 class LoanDisbursementSerializer(serializers.Serializer):
     idempotency_key = serializers.CharField(max_length=100, required=False)
     amount = serializers.DecimalField(max_digits=14, decimal_places=2)
-    origination_fee = serializers.DecimalField(max_digits=14, decimal_places=2, required=False, default=Decimal('0.00'))
+    origination_fee = serializers.DecimalField(
+        max_digits=14, decimal_places=2, required=False, default=Decimal('0.00')
+    )
 
     def validate(self, data):
         loan: Loan = self.context['loan']
         if loan.status not in ['APPROVED', 'PENDING']:
-            raise serializers.ValidationError('Loan is not in a disbursable state.')
+            raise serializers.ValidationError(
+                'Loan is not in a disbursable state.'
+            )
         return data
 
     def save(self, **kwargs):
         loan: Loan = self.context['loan']
-        idempotency_key = self.validated_data.get('idempotency_key') or f"loan-disbursement-{loan.id}"
+        idempotency_key = (
+            self.validated_data.get('idempotency_key')
+            or f"loan-disbursement-{loan.id}"
+        )
         amount = Decimal(self.validated_data['amount'])
-        origination_fee = Decimal(self.validated_data.get('origination_fee', Decimal('0.00')))
+        origination_fee = Decimal(
+            self.validated_data.get('origination_fee', Decimal('0.00'))
+        )
 
         event_payload = {
             'context': {
@@ -80,7 +143,9 @@ class LoanDisbursementSerializer(serializers.Serializer):
             }
         }
 
-        journal_entry = PostingRuleFactory.process_event('loan.disbursed', event_payload)
+        journal_entry = PostingRuleFactory.process_event(
+            'loan.disbursed', event_payload
+        )
 
         loan.status = 'ACTIVE'
         loan.disbursed_at = timezone.now()
@@ -92,7 +157,7 @@ class LoanDisbursementSerializer(serializers.Serializer):
             event_type='DISBURSEMENT',
             idempotency_key=idempotency_key,
             journal_entry=journal_entry,
-            payload=event_payload
+            payload=event_payload,
         )
 
         return loan
@@ -102,7 +167,9 @@ class LoanRepaymentSerializer(serializers.Serializer):
     idempotency_key = serializers.CharField(max_length=100)
     principal_amount = serializers.DecimalField(max_digits=14, decimal_places=2)
     interest_amount = serializers.DecimalField(max_digits=14, decimal_places=2)
-    external_reference = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    external_reference = serializers.CharField(
+        max_length=255, required=False, allow_blank=True
+    )
 
     def validate(self, data):
         loan: Loan = self.context['loan']
@@ -110,7 +177,9 @@ class LoanRepaymentSerializer(serializers.Serializer):
             raise serializers.ValidationError('Loan is not active.')
         total = data['principal_amount'] + data['interest_amount']
         if total <= 0:
-            raise serializers.ValidationError('Repayment amount must be greater than zero.')
+            raise serializers.ValidationError(
+                'Repayment amount must be greater than zero.'
+            )
         return data
 
     def save(self, **kwargs):
@@ -126,7 +195,9 @@ class LoanRepaymentSerializer(serializers.Serializer):
             amount=total,
             principal_component=principal,
             interest_component=interest,
-            external_reference=self.validated_data.get('external_reference', '')
+            external_reference=self.validated_data.get(
+                'external_reference', ''
+            ),
         )
 
         event_payload = {
@@ -141,10 +212,16 @@ class LoanRepaymentSerializer(serializers.Serializer):
             }
         }
 
-        journal_entry = PostingRuleFactory.process_event('loan.repayment_received', event_payload)
+        journal_entry = PostingRuleFactory.process_event(
+            'loan.repayment_received', event_payload
+        )
 
         loan.update_outstanding(principal_delta=-principal)
-        loan.accrued_interest = loan.accrued_interest - interest if loan.accrued_interest else Decimal('0.00')
+        loan.accrued_interest = (
+            loan.accrued_interest - interest
+            if loan.accrued_interest
+            else Decimal('0.00')
+        )
         if loan.outstanding_principal <= 0:
             loan.status = 'REPAID'
         loan.save()
@@ -157,7 +234,7 @@ class LoanRepaymentSerializer(serializers.Serializer):
             event_type='REPAYMENT',
             idempotency_key=idempotency_key,
             journal_entry=journal_entry,
-            payload=event_payload
+            payload=event_payload,
         )
 
         return repayment
@@ -170,9 +247,13 @@ class LoanWriteOffSerializer(serializers.Serializer):
     def validate(self, data):
         loan: Loan = self.context['loan']
         if loan.status not in ['ACTIVE', 'DEFAULTED']:
-            raise serializers.ValidationError('Loan must be active or defaulted to write off.')
+            raise serializers.ValidationError(
+                'Loan must be active or defaulted to write off.'
+            )
         if data['write_off_amount'] <= 0:
-            raise serializers.ValidationError('Write-off amount must be greater than zero.')
+            raise serializers.ValidationError(
+                'Write-off amount must be greater than zero.'
+            )
         return data
 
     def save(self, **kwargs):
@@ -189,7 +270,9 @@ class LoanWriteOffSerializer(serializers.Serializer):
             }
         }
 
-        journal_entry = PostingRuleFactory.process_event('loan.written_off', event_payload)
+        journal_entry = PostingRuleFactory.process_event(
+            'loan.written_off', event_payload
+        )
 
         loan.update_outstanding(principal_delta=-amount)
         loan.status = 'WRITTEN_OFF'
@@ -200,7 +283,7 @@ class LoanWriteOffSerializer(serializers.Serializer):
             event_type='WRITE_OFF',
             idempotency_key=idempotency_key,
             journal_entry=journal_entry,
-            payload=event_payload
+            payload=event_payload,
         )
         return loan
 
@@ -213,15 +296,21 @@ class LoanInterestAccrualSerializer(serializers.Serializer):
     def validate(self, data):
         loan: Loan = self.context['loan']
         if loan.status not in ['ACTIVE', 'DISBURSED']:
-            raise serializers.ValidationError('Loan must be active to accrue interest.')
+            raise serializers.ValidationError(
+                'Loan must be active to accrue interest.'
+            )
         if data['accrued_interest'] <= 0:
-            raise serializers.ValidationError('Accrued interest must be positive.')
+            raise serializers.ValidationError(
+                'Accrued interest must be positive.'
+            )
         return data
 
     def save(self, **kwargs):
         loan: Loan = self.context['loan']
         amount = Decimal(self.validated_data['accrued_interest'])
-        accrual_date = self.validated_data.get('accrual_date') or timezone.now().date()
+        accrual_date = (
+            self.validated_data.get('accrual_date') or timezone.now().date()
+        )
 
         event_payload = {
             'context': {
@@ -233,9 +322,13 @@ class LoanInterestAccrualSerializer(serializers.Serializer):
             }
         }
 
-        journal_entry = PostingRuleFactory.process_event('loan.interest_accrued', event_payload)
+        journal_entry = PostingRuleFactory.process_event(
+            'loan.interest_accrued', event_payload
+        )
 
-        loan.update_outstanding(principal_delta=Decimal('0.00'), interest_delta=amount)
+        loan.update_outstanding(
+            principal_delta=Decimal('0.00'), interest_delta=amount
+        )
         loan.save()
 
         LoanEvent.objects.create(
@@ -243,7 +336,7 @@ class LoanInterestAccrualSerializer(serializers.Serializer):
             event_type='ACCRUAL',
             idempotency_key=self.validated_data['idempotency_key'],
             journal_entry=journal_entry,
-            payload=event_payload
+            payload=event_payload,
         )
         return loan
 
@@ -252,17 +345,35 @@ class LoanRepaymentListSerializer(serializers.ModelSerializer):
     class Meta:
         model = LoanRepayment
         fields = [
-            'id', 'loan', 'idempotency_key', 'amount', 'principal_component',
-            'interest_component', 'paid_at', 'external_reference', 'status',
-            'created_at', 'updated_at'
+            'id',
+            'loan',
+            'idempotency_key',
+            'amount',
+            'principal_component',
+            'interest_component',
+            'paid_at',
+            'external_reference',
+            'status',
+            'created_at',
+            'updated_at',
         ]
         read_only_fields = fields
 
 
 class LoanEventSerializer(serializers.ModelSerializer):
-    journal_entry = serializers.PrimaryKeyRelatedField(queryset=JournalEntry.objects.all(), allow_null=True)
+    journal_entry = serializers.PrimaryKeyRelatedField(
+        queryset=JournalEntry.objects.all(), allow_null=True
+    )
 
     class Meta:
         model = LoanEvent
-        fields = ['id', 'loan', 'event_type', 'idempotency_key', 'journal_entry', 'payload', 'created_at']
+        fields = [
+            'id',
+            'loan',
+            'event_type',
+            'idempotency_key',
+            'journal_entry',
+            'payload',
+            'created_at',
+        ]
         read_only_fields = fields

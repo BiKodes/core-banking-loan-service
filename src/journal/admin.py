@@ -1,6 +1,7 @@
 """Admin configuration for journal app."""
 
 from django.contrib import admin
+
 from .models import JournalEntry, JournalEntryLine, TransactionIdempotencyCache
 
 
@@ -18,13 +19,29 @@ class JournalEntryLineInline(admin.TabularInline):
 class JournalEntryAdmin(admin.ModelAdmin):
     """Admin for JournalEntry."""
 
-    list_display = ('id', 'idempotency_key', 'description', 'status', 'created_at')
+    list_display = (
+        'id',
+        'idempotency_key',
+        'description',
+        'status',
+        'created_at',
+    )
     list_filter = ('status', 'created_at')
     search_fields = ('description', 'idempotency_key')
-    readonly_fields = ('idempotency_key', 'created_at', 'updated_at', 'is_balanced_display')
+    readonly_fields = (
+        'idempotency_key',
+        'created_at',
+        'updated_at',
+        'is_balanced_display',
+    )
     fields = (
-        'idempotency_key', 'description', 'status',
-        'reversed_by', 'is_balanced_display', 'created_at', 'updated_at'
+        'idempotency_key',
+        'description',
+        'status',
+        'reversed_by',
+        'is_balanced_display',
+        'created_at',
+        'updated_at',
     )
     inlines = [JournalEntryLineInline]
     ordering = ('-created_at',)
@@ -47,11 +64,29 @@ class JournalEntryAdmin(admin.ModelAdmin):
 class JournalEntryLineAdmin(admin.ModelAdmin):
     """Admin for JournalEntryLine."""
 
-    list_display = ('id', 'journal_entry', 'account', 'entry_type', 'amount', 'created_at')
+    list_display = (
+        'id',
+        'journal_entry',
+        'account',
+        'entry_type',
+        'amount',
+        'created_at',
+    )
     list_filter = ('entry_type', 'created_at', 'account__account_type')
-    search_fields = ('journal_entry__description', 'account__code', 'account__name')
+    search_fields = (
+        'journal_entry__description',
+        'account__code',
+        'account__name',
+    )
     readonly_fields = ('journal_entry', 'created_at')
-    fields = ('journal_entry', 'account', 'entry_type', 'amount', 'description', 'created_at')
+    fields = (
+        'journal_entry',
+        'account',
+        'entry_type',
+        'amount',
+        'description',
+        'created_at',
+    )
     ordering = ('-journal_entry__created_at', 'id')
 
     def has_add_permission(self, request):

@@ -2,6 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
+
 from src.accounts.models import Account
 
 
@@ -13,7 +14,9 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **options):
         """Execute command."""
-        self.stdout.write(self.style.SUCCESS('Creating default chart of accounts...'))
+        self.stdout.write(
+            self.style.SUCCESS('Creating default chart of accounts...')
+        )
 
         coa = [
             # ASSETS
@@ -71,7 +74,6 @@ class Command(BaseCommand):
                 'parent_code': '1200',
                 'currency': 'KES',
             },
-
             # LIABILITIES
             {
                 'code': '2000',
@@ -96,7 +98,6 @@ class Command(BaseCommand):
                 'parent_code': '2100',
                 'currency': 'KES',
             },
-
             # EQUITY
             {
                 'code': '3000',
@@ -112,7 +113,6 @@ class Command(BaseCommand):
                 'parent_code': '3000',
                 'currency': 'KES',
             },
-
             # INCOME
             {
                 'code': '4000',
@@ -144,7 +144,6 @@ class Command(BaseCommand):
                 'parent_code': '4200',
                 'currency': 'KES',
             },
-
             # EXPENSES
             {
                 'code': '5000',
@@ -185,14 +184,15 @@ class Command(BaseCommand):
                 account_data['parent'] = parent
 
             account, created = Account.objects.get_or_create(
-                code=account_data['code'],
-                defaults=account_data
+                code=account_data['code'], defaults=account_data
             )
 
             if created:
                 created_count += 1
                 self.stdout.write(
-                    self.style.SUCCESS(f'  ✓ Created: {account.code} - {account.name}')
+                    self.style.SUCCESS(
+                        f'  ✓ Created: {account.code} - {account.name}'
+                    )
                 )
             else:
                 skipped_count += 1
