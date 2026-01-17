@@ -76,7 +76,7 @@ class PostingRuleBase(PostingRuleInterface):
         journal_entry = JournalEntry.objects.create(
             idempotency_key=idempotency_key,
             description=description,
-            status="POSTED"
+            status="POSTED",
         )
 
         for entry in entries_data:
@@ -95,7 +95,7 @@ class PostingRuleBase(PostingRuleInterface):
                 account=account,
                 entry_type=entry['entry_type'],
                 amount=Decimal(str(entry['amount'])),
-                description=entry.get('description', '')
+                description=entry.get('description', ''),
             )
 
         return journal_entry

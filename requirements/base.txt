@@ -1,12 +1,12 @@
-# Base requirements for the project
 celery
 Django
 django-allauth
 django-cleanup
 djangorestframework
 django-configurations
+django-filter
 Pillow
 redis
 requests
-openpyxl==3.10.10
+openpyxl==3.1.5
 reportlab==4.0.7

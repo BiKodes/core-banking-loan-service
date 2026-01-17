@@ -5,9 +5,9 @@ import logging
 from .base import UnknownEventPostingRule
 from .loan_operations import (
     LoanDisbursement,
+    LoanInterestAccrual,
     LoanRepayment,
     LoanWriteOff,
-    LoanInterestAccrual
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +28,9 @@ class PostingRuleFactory:
         """
         Get posting rule for an event type.
         """
-        rule_class = POSTING_RULES_REGISTRY.get(event_type, UnknownEventPostingRule)
+        rule_class = POSTING_RULES_REGISTRY.get(
+            event_type, UnknownEventPostingRule
+        )
         return rule_class()
 
     @staticmethod
@@ -37,7 +39,9 @@ class PostingRuleFactory:
         Process an event with the appropriate posting rule.
         """
         rule = PostingRuleFactory.get_posting_rule(event_type)
-        logger.info(f"Processing event type: {event_type} with rule: {rule.__class__.__name__}")
+        logger.info(
+            f"Processing event type: {event_type} with rule: {rule.__class__.__name__}"
+        )
         return rule.process(event_data)
 
     @staticmethod
@@ -46,4 +50,6 @@ class PostingRuleFactory:
         Register a new posting rule.
         """
         POSTING_RULES_REGISTRY[event_type] = rule_class
-        logger.info(f"Registered posting rule for {event_type}: {rule_class.__name__}")
+        logger.info(
+            f"Registered posting rule for {event_type}: {rule_class.__name__}"
+        )

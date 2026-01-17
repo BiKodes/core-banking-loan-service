@@ -1,14 +1,20 @@
 """Tests for journal app serializers."""
 
-from django.test import TestCase
 from decimal import Decimal
-from rest_framework.exceptions import ValidationError
+
+from django.test import TestCase
 
 from src.accounts.models import Account
-from src.journal.models import JournalEntry, JournalEntryLine, TransactionIdempotencyCache
+from src.journal.models import (
+    JournalEntry,
+    JournalEntryLine,
+    TransactionIdempotencyCache,
+)
 from src.journal.serializers import (
-    JournalEntrySerializer, JournalEntryCreateSerializer,
-    JournalEntryLineCreateUpdateSerializer, JournalEntryReverseSerializer
+    JournalEntryCreateSerializer,
+    JournalEntryLineCreateUpdateSerializer,
+    JournalEntryReverseSerializer,
+    JournalEntrySerializer,
 )
 
 
@@ -23,7 +29,7 @@ class JournalEntryLineSerializerTests(TestCase):
             name='Cash',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
     def test_valid_line_serialization(self):
@@ -32,19 +38,21 @@ class JournalEntryLineSerializerTests(TestCase):
             'account_code': '1110',
             'entry_type': 'DR',
             'amount': Decimal('1000.00'),
-            'description': 'Cash receipt'
+            'description': 'Cash receipt',
         }
 
         serializer = JournalEntryLineCreateUpdateSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        self.assertEqual(serializer.validated_data['amount'], Decimal('1000.00'))
+        self.assertEqual(
+            serializer.validated_data['amount'], Decimal('1000.00')
+        )
 
     def test_invalid_entry_type(self):
         """Test invalid entry type validation."""
         data = {
             'account_code': '1110',
             'entry_type': 'INVALID',
-            'amount': Decimal('1000.00')
+            'amount': Decimal('1000.00'),
         }
 
         serializer = JournalEntryLineCreateUpdateSerializer(data=data)
@@ -56,7 +64,7 @@ class JournalEntryLineSerializerTests(TestCase):
         data = {
             'account_code': '1110',
             'entry_type': 'DR',
-            'amount': Decimal('0.00')
+            'amount': Decimal('0.00'),
         }
 
         serializer = JournalEntryLineCreateUpdateSerializer(data=data)
@@ -68,7 +76,7 @@ class JournalEntryLineSerializerTests(TestCase):
         data = {
             'account_code': '1110',
             'entry_type': 'DR',
-            'amount': Decimal('-100.00')
+            'amount': Decimal('-100.00'),
         }
 
         serializer = JournalEntryLineCreateUpdateSerializer(data=data)
@@ -87,7 +95,7 @@ class JournalEntryCreateSerializerTests(TestCase):
             name='Cash',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
         cls.loans_account = Account.objects.create(
@@ -95,7 +103,7 @@ class JournalEntryCreateSerializerTests(TestCase):
             name='Loans Receivable',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
     def test_valid_journal_entry_creation(self):
@@ -108,15 +116,15 @@ class JournalEntryCreateSerializerTests(TestCase):
                     'account_code': '1210',
                     'entry_type': 'DR',
                     'amount': '10000.00',
-                    'description': 'Loan principal'
+                    'description': 'Loan principal',
                 },
                 {
                     'account_code': '1110',
                     'entry_type': 'CR',
                     'amount': '10000.00',
-                    'description': 'Cash out'
-                }
-            ]
+                    'description': 'Cash out',
+                },
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -141,14 +149,14 @@ class JournalEntryCreateSerializerTests(TestCase):
                 {
                     'account_code': '1210',
                     'entry_type': 'DR',
-                    'amount': '1000.00'
+                    'amount': '1000.00',
                 },
                 {
                     'account_code': '1110',
                     'entry_type': 'CR',
-                    'amount': '1000.00'
-                }
-            ]
+                    'amount': '1000.00',
+                },
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -164,14 +172,14 @@ class JournalEntryCreateSerializerTests(TestCase):
                 {
                     'account_code': '1210',
                     'entry_type': 'DR',
-                    'amount': '10000.00'
+                    'amount': '10000.00',
                 },
                 {
                     'account_code': '1110',
                     'entry_type': 'CR',
-                    'amount': '5000.00'
-                }
-            ]
+                    'amount': '5000.00',
+                },
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -183,7 +191,7 @@ class JournalEntryCreateSerializerTests(TestCase):
         data = {
             'idempotency_key': 'je-nolines-001',
             'description': 'No lines entry',
-            'lines': []
+            'lines': [],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -199,9 +207,9 @@ class JournalEntryCreateSerializerTests(TestCase):
                 {
                     'account_code': '1210',
                     'entry_type': 'DR',
-                    'amount': '1000.00'
+                    'amount': '1000.00',
                 }
-            ]
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -217,14 +225,14 @@ class JournalEntryCreateSerializerTests(TestCase):
                 {
                     'account_code': '9999',
                     'entry_type': 'DR',
-                    'amount': '1000.00'
+                    'amount': '1000.00',
                 },
                 {
                     'account_code': '1110',
                     'entry_type': 'CR',
-                    'amount': '1000.00'
-                }
-            ]
+                    'amount': '1000.00',
+                },
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -233,12 +241,12 @@ class JournalEntryCreateSerializerTests(TestCase):
 
     def test_multi_line_balanced_entry(self):
         """Test creating entry with multiple balanced lines."""
-        fee_account = Account.objects.create(
+        _fee_account = Account.objects.create(
             code='4210',
             name='Fee Income',
             account_type='INCOME',
             currency='KES',
-            debit_or_credit='CR'
+            debit_or_credit='CR',
         )
 
         data = {
@@ -248,19 +256,19 @@ class JournalEntryCreateSerializerTests(TestCase):
                 {
                     'account_code': '1210',
                     'entry_type': 'DR',
-                    'amount': '10000.00'
+                    'amount': '10000.00',
                 },
                 {
                     'account_code': '1110',
                     'entry_type': 'CR',
-                    'amount': '9900.00'
+                    'amount': '9900.00',
                 },
                 {
                     'account_code': '4210',
                     'entry_type': 'CR',
-                    'amount': '100.00'
-                }
-            ]
+                    'amount': '100.00',
+                },
+            ],
         }
 
         serializer = JournalEntryCreateSerializer(data=data)
@@ -281,20 +289,20 @@ class JournalEntrySerializerTests(TestCase):
             name='Cash',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
         cls.je = JournalEntry.objects.create(
             idempotency_key='je-read-001',
             description='Test read serializer',
-            status='POSTED'
+            status='POSTED',
         )
 
         JournalEntryLine.objects.create(
             journal_entry=cls.je,
             account=cls.account,
             entry_type='DR',
-            amount=Decimal('1000.00')
+            amount=Decimal('1000.00'),
         )
 
     def test_read_journal_entry(self):
@@ -322,7 +330,7 @@ class JournalEntryReverseSerializerTests(TestCase):
             name='Cash',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
         cls.loans = Account.objects.create(
@@ -330,7 +338,7 @@ class JournalEntryReverseSerializerTests(TestCase):
             name='Loans Receivable',
             account_type='ASSET',
             currency='KES',
-            debit_or_credit='DR'
+            debit_or_credit='DR',
         )
 
     def test_reverse_journal_entry(self):
@@ -338,31 +346,30 @@ class JournalEntryReverseSerializerTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='je-orig-001',
             description='Original entry',
-            status='POSTED'
+            status='POSTED',
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.loans,
             entry_type='DR',
-            amount=Decimal('5000.00')
+            amount=Decimal('5000.00'),
         )
 
         JournalEntryLine.objects.create(
             journal_entry=je,
             account=self.cash,
             entry_type='CR',
-            amount=Decimal('5000.00')
+            amount=Decimal('5000.00'),
         )
 
         data = {
             'idempotency_key': 'je-rev-001',
-            'description': 'Reversing original'
+            'description': 'Reversing original',
         }
 
         serializer = JournalEntryReverseSerializer(
-            data=data,
-            context={'journal_entry': je}
+            data=data, context={'journal_entry': je}
         )
         self.assertTrue(serializer.is_valid(), serializer.errors)
 
@@ -375,16 +382,13 @@ class JournalEntryReverseSerializerTests(TestCase):
         je = JournalEntry.objects.create(
             idempotency_key='je-pending-001',
             description='Pending entry',
-            status='PENDING'
+            status='PENDING',
         )
 
-        data = {
-            'idempotency_key': 'je-rev-pending-001'
-        }
+        data = {'idempotency_key': 'je-rev-pending-001'}
 
         serializer = JournalEntryReverseSerializer(
-            data=data,
-            context={'journal_entry': je}
+            data=data, context={'journal_entry': je}
         )
         self.assertFalse(serializer.is_valid())
 
@@ -393,26 +397,23 @@ class JournalEntryReverseSerializerTests(TestCase):
         je1 = JournalEntry.objects.create(
             idempotency_key='je-orig-rev-001',
             description='Original',
-            status='POSTED'
+            status='POSTED',
         )
 
         je2 = JournalEntry.objects.create(
             idempotency_key='je-rev-je1-001',
             description='Reversal of je1',
             status='POSTED',
-            reversed_by=None
+            reversed_by=None,
         )
 
         je1.status = 'REVERSED'
         je1.reversed_by = je2
         je1.save()
 
-        data = {
-            'idempotency_key': 'je-rev-again-001'
-        }
+        data = {'idempotency_key': 'je-rev-again-001'}
 
         serializer = JournalEntryReverseSerializer(
-            data=data,
-            context={'journal_entry': je1}
+            data=data, context={'journal_entry': je1}
         )
         self.assertFalse(serializer.is_valid())

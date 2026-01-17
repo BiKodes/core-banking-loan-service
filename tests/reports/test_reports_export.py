@@ -1,25 +1,21 @@
 """Tests for report export functionality."""
 
-import pytest
+from datetime import datetime
 from decimal import Decimal
-from datetime import datetime, date
-from django.utils import timezone
-from openpyxl import load_workbook
-from io import BytesIO
 
 from src.reports.export import (
     export_account_balance_report,
-    export_transaction_history_report,
-    export_trial_balance_report,
     export_balance_sheet_report,
     export_loan_aging_report,
+    export_transaction_history_report,
+    export_trial_balance_report,
     get_excel_response,
 )
 
 
 class TestAccountBalanceExport:
     """Test account balance report export."""
-    
+
     def test_export_account_balance_report(self):
         """Test generating account balance Excel report."""
         account_data = {
@@ -31,16 +27,16 @@ class TestAccountBalanceExport:
             'credit_total': Decimal('5000.00'),
             'as_of_date': datetime.now(),
         }
-        
+
         wb = export_account_balance_report(account_data)
-        
+
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
 
 class TestTransactionHistoryExport:
     """Test transaction history report export."""
-    
+
     def test_export_transaction_history_report(self):
         """Test generating transaction history Excel report."""
         export_data = {
@@ -61,16 +57,16 @@ class TestTransactionHistoryExport:
                 }
             ],
         }
-        
+
         wb = export_transaction_history_report(export_data)
-        
+
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
 
 class TestTrialBalanceExport:
     """Test trial balance report export."""
-    
+
     def test_export_trial_balance_report(self):
         """Test generating trial balance Excel report."""
         export_data = {
@@ -88,23 +84,23 @@ class TestTrialBalanceExport:
                     'account_name': 'Accounts Payable',
                     'debit_balance': Decimal('0.00'),
                     'credit_balance': Decimal('5000.00'),
-                }
+                },
             ],
             'total_debits': Decimal('5000.00'),
             'total_credits': Decimal('5000.00'),
             'is_balanced': True,
             'as_of_date': datetime.now(),
         }
-        
+
         wb = export_trial_balance_report(export_data)
-        
+
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
 
 class TestBalanceSheetExport:
     """Test balance sheet report export."""
-    
+
     def test_export_balance_sheet_report(self):
         """Test generating balance sheet Excel report."""
         export_data = {
@@ -135,16 +131,16 @@ class TestBalanceSheetExport:
             'is_balanced': True,
             'as_of_date': datetime.now(),
         }
-        
+
         wb = export_balance_sheet_report(export_data)
-        
+
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
 
 class TestLoanAgingExport:
     """Test loan aging report export."""
-    
+
     def test_export_loan_aging_report(self):
         """Test generating loan aging Excel report."""
         export_data = {
@@ -162,16 +158,16 @@ class TestLoanAgingExport:
             'loan_details': [],
             'as_of_date': datetime.now(),
         }
-        
+
         wb = export_loan_aging_report(export_data)
-        
+
         assert wb is not None
         assert len(wb.sheetnames) >= 1
 
 
 class TestGetExcelResponse:
     """Test Excel response generation."""
-    
+
     def test_get_excel_response(self):
         """Test generating HTTP response for Excel file."""
         account_data = {
@@ -183,10 +179,13 @@ class TestGetExcelResponse:
             'credit_total': Decimal('5000.00'),
             'as_of_date': datetime.now(),
         }
-        
+
         wb = export_account_balance_report(account_data)
         response = get_excel_response('test_report', wb)
-        
-        assert response['Content-Type'] == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+        assert (
+            response['Content-Type']
+            == 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
         assert 'Content-Disposition' in response
         assert 'test_report' in response['Content-Disposition']

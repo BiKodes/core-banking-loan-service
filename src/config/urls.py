@@ -1,6 +1,7 @@
 """core_banking_loan_service URL Configuration"""
+
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import include, path
 
 app_name = "core_banking_loan_service"
 

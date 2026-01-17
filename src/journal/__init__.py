@@ -1,0 +1,1 @@
+"""Journal and double-entry accounting module."""
