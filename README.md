@@ -311,6 +311,32 @@ python manage.py shell
 python manage.py runserver
 ```
 
+### Development Commands
+
+All common development tasks are automated via Invoke. Run `invoke --list` to see all available commands:
+
+```bash
+# Run tests with pytest
+invoke test-all
+
+# Run tests with coverage report (generates htmlcov/index.html)
+invoke coverage
+
+# Format code (isort + black)
+invoke format
+
+# Check code style (flake8)
+invoke lint
+
+# Clean build artifacts and Python cache
+invoke clean
+
+# Run Django unittests
+invoke unittest
+```
+
+For detailed setup and development instructions, see [Local Development Setup](docs/local-dev-setup/local-development-setup.md).
+
 ### API Usage
 
 ```bash
@@ -707,5 +733,3 @@ See [LICENSE](LICENSE) for details.
 ## Contributors
 
 Contributions are welcome! Please read the contribution guidelines before submitting pull requests.
-
-**Project Status**: **Production Ready** - All core features implemented and tested
